@@ -1,2 +1,3 @@
 double sqroot(double square);
-double cbroot(double cube);
+double power(double x, int n);
+double nthroot(double x, int n, double precision);
