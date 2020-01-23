@@ -10,8 +10,9 @@ This file containes floating point math functions writeen from scratch.
 #include "math_flp.h"
 
 
-//#define MINDIFF 2.2250738585072014e-308   // smallest positive double
-#define MINDIFF 2.25e-308                   // use for convergence check
+#define MINNUM 2.25e-308   // small number
+#define MAXNUM 4E+168      // large number
+#define NATLOG2 0.69314718 // natural log of 2
 
 double sqroot(double square)
 /*computes square root using newton rhapson method
@@ -24,7 +25,7 @@ double sqroot(double square)
         last = root;
         root = (root + square / root) / 2; //update equation
         diff = root - last;
-    } while (diff > MINDIFF || diff < -MINDIFF);
+    } while (diff > MINNUM || diff < -MINNUM);
     return root;
 }
 
@@ -62,4 +63,49 @@ returns: x to the power n*/
     n--;
   } while (n>0);
   return y;
+}
+
+double natlog(double x)
+/*computes natural log using multiple methods.
+*x:input value for which natural log needs to be computed
+*returns: natural log of given value x*/
+{
+  if (x <= 0) return -MAXNUM;
+  if (x == 1) return 0;
+  if (x < 1)
+  /*use taylor series expansion*/
+  {
+    x = 1 - x;
+    double y = -x, xpow = x, last, n = 1;
+    while (n < 50){ //expand for 50 terms
+      n++;
+      xpow *= x;
+      y -= xpow/n;
+    }
+    return y;
+  }
+  if (x < 2)
+  /*use ramez function approximation. Should limit error to 0.00006*/
+  {
+    return -1.7417939 + (2.8212026 + (-1.4699568 + (0.44717955 - 0.056570851 * x) * x) * x) * x;
+  }
+  /*use smartly ramez function approximation. ln(x) = ln(2**n * x2)
+  *ln(x) = n*ln(2)+ ln(x2), where x2 is between 1 and 2.*/
+  double y, rem;
+  int log2;
+  log2 = msb(x);
+  rem = x/(1<<log2);
+  y = -1.7417939 + (2.8212026 + (-1.4699568 + (0.44717955 - 0.056570851 * rem) * rem) * rem) * rem;
+  y += NATLOG2*log2;
+  return y;
+}
+
+int msb(int x)
+/*Fetches largest value of n for condition x > 2**n
+*x:input number for which largest value of n is required
+*returns largest value of n.*/
+{
+  int n=0;
+  while(x >>= 1) n++;
+  return n;
 }
